@@ -5,12 +5,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 indir = 'C:\EEG\';% path for subject directories above
 outdir = 'C:\EEG\NewResults\';% output directory
-this_dir = 'C:\Artifact_removal_code_FINAL\';
-channel_location_file = 'C:\Artifact_removal_code_FINAL\32ch_bv_noHEOG.elp';
+this_dir = 'C:\ARP\';
+channel_location_file = 'C:\ARP\32ch_bv_noHEOG.elp';
 % Read channel location structure
 chanlocs=readlocs(channel_location_file);
-eye_artefacts_file = 'C:\Artifact_removal_code_FINAL\bv_generic_eyeartifacts_32ch.mat';
-%channelstruct='C:\Artifact_removal_code_FINAL\32ch_bv_noHEOG.mat';
+eye_artefacts_file = 'C:\ARP\bv_generic_eyeartifacts_32ch.mat';
+%channelstruct='C:\ARP\32ch_bv_noHEOG.mat';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%Study specifics
