@@ -1,0 +1,240 @@
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>batch</title>
+      <meta name="generator" content="MATLAB 7.1">
+      <meta name="date" content="2009-05-05">
+      <meta name="m-file" content="batch"><style>
+
+body {
+  background-color: white;
+  margin:10px;
+}
+
+h1 {
+  color: #990000; 
+  font-size: x-large;
+}
+
+h2 {
+  color: #990000;
+  font-size: medium;
+}
+
+/* Make the text shrink to fit narrow windows, but not stretch too far in 
+wide windows.  On Gecko-based browsers, the shrink-to-fit doesn't work. */ 
+p,h1,h2,div.content div {
+  /* for MATLAB's browser */
+  width: 600px;
+  /* for Mozilla, but the "width" tag overrides it anyway */
+  max-width: 600px;
+  /* for IE */
+  width:expression(document.body.clientWidth > 620 ? "600px": "auto" );
+}
+
+pre.codeinput {
+  background: #EEEEEE;
+  padding: 10px;
+}
+
+span.keyword {color: #0000FF}
+span.comment {color: #228B22}
+span.string {color: #A020F0}
+span.untermstring {color: #B20000}
+span.syscmd {color: #B28C00}
+
+pre.codeoutput {
+  color: #666666;
+  padding: 10px;
+}
+
+pre.error {
+  color: red;
+}
+
+p.footer {
+  text-align: right;
+  font-size: xx-small;
+  font-weight: lighter;
+  font-style: italic;
+  color: gray;
+}
+
+  </style></head>
+   <body>
+      <div class="content">
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#2">batch1</a></li>
+               <li><a href="#3">batch2</a></li>
+               <li><a href="#4">batch3</a></li>
+               <li><a href="#5">batch4</a></li>
+            </ul>
+         </div><pre class="codeinput"><span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+<span class="comment">%%% Setup</span>
+<span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+addpath(<span class="string">'/arrakis/mcintosh_lab/natasa/eeglab/eeglab6.01b'</span>);
+eeglab;
+
+<span class="comment">%subjects = {'s3670X'};</span>
+subjects = {<span class="string">'s1807'</span>,<span class="string">'s2084'</span>,<span class="string">'s2429'</span>,<span class="string">'s2731'</span>,<span class="string">'s3441'</span>,<span class="string">'s3563'</span>,<span class="string">'s3619X'</span>,<span class="string">'s3651'</span>,<span class="string">'s3659'</span>,<span class="string">'s3669'</span>,<span class="string">'s3735'</span>,<span class="string">'s3742'</span>,<span class="string">'s4089'</span>,<span class="string">'s4090'</span>,<span class="string">'s4119'</span>,<span class="string">'s4147'</span>,<span class="string">'s4482'</span>,<span class="string">'s4753'</span>,<span class="string">'s4977'</span>,<span class="string">'s5080'</span>};
+
+indir = <span class="string">'/rri_disks/victoria/alain_lab/patricia/Animal/'</span>;<span class="comment">% path for subject directories above</span>
+
+outdir = <span class="string">'/rri_disks/victoria/alain_lab/patricia/Artifact_removal_results/'</span>;<span class="comment">% output directory</span>
+
+this_dir = <span class="string">'/rri_disks/victoria/alain_lab/patricia/Artifact_removal_code/'</span>;
+
+<span class="comment">% load channel location  structure</span>
+load(<span class="string">'Biosemi_chanlocs_76.mat'</span>);<span class="comment">% this loads variable chanlocs - channel location structure</span>
+
+epoch_limits= [-0.2 0.5];
+baseline    = [-0.2 0];
+correct_responses = [1 2];
+incorrect_responses = [11 22];
+stims = [110 111 115 120 121 125 130 131 135 140 141 145 155 210 211 215 220 221 225 230 231 235 240 241 245 255];
+relevant_events = [correct_responses incorrect_responses stims];
+
+<span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+</pre><pre class="codeoutput">Error using ==&gt; evalin
+Undefined function or variable 'eeglab'.</pre><h2>batch1<a name="2"></a></h2><pre class="codeinput"><span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+<span class="comment">% get stats for each continuous file to see if events are ok and if data is ok</span>
+<span class="comment">% concatenate data from all cnt files</span>
+<span class="comment">% select best 8min chunk from concatenated data</span>
+<span class="comment">% perform quick ica and detect artifacts</span>
+
+<span class="comment">% batch1 parameters</span>
+chunk_length = 8*60; <span class="comment">% in sec (8 minutes here)- length of chunk of cont data to perform initial quick ica - should be sufficently long to guarantee plenty of eye artifacts</span>
+variance_portion = 0.9; <span class="comment">% for pca reduction</span>
+corr_threshold = 0.9; <span class="comment">% threshold for correl with generic ocular artifacts</span>
+histocenters = [-500:10:500]; <span class="comment">% histo centers for detecting bad channels (in uV)</span>
+
+<span class="comment">%batch1;</span>
+<span class="comment">%batch1_summary;</span>
+
+<span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+</pre><h2>batch2<a name="3"></a></h2><pre class="codeinput"><span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+<span class="comment">% merge data, temporarily remove artifacts from batch1</span>
+<span class="comment">% filter, epoch, reassign eventtypes and</span>
+<span class="comment">% reject trials where most kept ica are above threshold</span>
+<span class="comment">% get stats on original and new num trials</span>
+epoch_limits= [-0.2 0.5];
+baseline    = [-0.2 0];
+num_comp_thresh = 0.8;
+corr_threshold = 0.9; <span class="comment">% revised threshold for correl with generic ocular artifacts</span>
+allowable_values = {110 111 115 120 121 125 130 131 135 140 141 145 155 210 211 215 220 221 225 230 231 235 240 241 245 255};
+conditions ={<span class="string">'UHF'</span>, <span class="string">'UHN'</span>, <span class="string">'UHE'</span>, <span class="string">'UAF'</span>,<span class="string">'UAN'</span>, <span class="string">'UAE'</span>, <span class="string">'UCF'</span>,<span class="string">'UCN'</span>, <span class="string">'UCE'</span>, <span class="string">'UDF'</span>,<span class="string">'UDN'</span>, <span class="string">'UDE'</span>,<span class="string">'UO'</span>,<span class="keyword">...</span>
+   <span class="string">'IHF'</span>, <span class="string">'IHN'</span>, <span class="string">'IHE'</span>, <span class="string">'IAF'</span>,<span class="string">'IAN'</span>, <span class="string">'IAE'</span>, <span class="string">'ICF'</span>,<span class="string">'ICN'</span>, <span class="string">'ICE'</span>, <span class="string">'IDF'</span>,<span class="string">'IDN'</span>, <span class="string">'IDE'</span>,<span class="string">'IO'</span> };
+
+<span class="comment">%batch2;</span>
+<span class="comment">%batch2_summary;</span>
+
+<span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+</pre><h2>batch3<a name="4"></a></h2><pre class="codeinput"><span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+<span class="comment">% load merged set</span>
+<span class="comment">% perform  ica on 99% variance</span>
+
+variance_portion = 0.99; <span class="comment">% for pca reduction</span>
+<span class="comment">%batch3;</span>
+
+<span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+</pre><h2>batch4<a name="5"></a></h2><pre class="codeinput"><span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+<span class="comment">% let user view icas from batch3 and select those that should be rejected from all trials. The program then  selectively removes comps on trial-to-trial basis.Final clean data is then split into condition specific sets.</span>
+<span class="comment">% define conditions and corresponding triggers-of-interest</span>
+
+<span class="comment">%batch4;</span>
+batch5;
+</pre><p class="footer"><br>
+            Published with MATLAB&reg; 7.1<br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Setup
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+addpath('/arrakis/mcintosh_lab/natasa/eeglab/eeglab6.01b');
+eeglab;
+
+%subjects = {'s3670X'};
+subjects = {'s1807','s2084','s2429','s2731','s3441','s3563','s3619X','s3651','s3659','s3669','s3735','s3742','s4089','s4090','s4119','s4147','s4482','s4753','s4977','s5080'};
+
+indir = '/rri_disks/victoria/alain_lab/patricia/Animal/';% path for subject directories above
+
+outdir = '/rri_disks/victoria/alain_lab/patricia/Artifact_removal_results/';% output directory
+
+this_dir = '/rri_disks/victoria/alain_lab/patricia/Artifact_removal_code/';
+
+% load channel location  structure 
+load('Biosemi_chanlocs_76.mat');% this loads variable chanlocs - channel location structure 
+
+epoch_limits= [-0.2 0.5];
+baseline    = [-0.2 0];
+correct_responses = [1 2];
+incorrect_responses = [11 22];
+stims = [110 111 115 120 121 125 130 131 135 140 141 145 155 210 211 215 220 221 225 230 231 235 240 241 245 255];
+relevant_events = [correct_responses incorrect_responses stims];
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% batch1
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% get stats for each continuous file to see if events are ok and if data is ok
+% concatenate data from all cnt files
+% select best 8min chunk from concatenated data
+% perform quick ica and detect artifacts
+
+% batch1 parameters
+chunk_length = 8*60; % in sec (8 minutes here)- length of chunk of cont data to perform initial quick ica - should be sufficently long to guarantee plenty of eye artifacts
+variance_portion = 0.9; % for pca reduction
+corr_threshold = 0.9; % threshold for correl with generic ocular artifacts
+histocenters = [-500:10:500]; % histo centers for detecting bad channels (in uV)
+
+%batch1;
+%batch1_summary;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% batch2
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% merge data, temporarily remove artifacts from batch1
+% filter, epoch, reassign eventtypes and 
+% reject trials where most kept ica are above threshold
+% get stats on original and new num trials
+epoch_limits= [-0.2 0.5];
+baseline    = [-0.2 0];
+num_comp_thresh = 0.8; 
+corr_threshold = 0.9; % revised threshold for correl with generic ocular artifacts
+allowable_values = {110 111 115 120 121 125 130 131 135 140 141 145 155 210 211 215 220 221 225 230 231 235 240 241 245 255};
+conditions ={'UHF', 'UHN', 'UHE', 'UAF','UAN', 'UAE', 'UCF','UCN', 'UCE', 'UDF','UDN', 'UDE','UO',...
+   'IHF', 'IHN', 'IHE', 'IAF','IAN', 'IAE', 'ICF','ICN', 'ICE', 'IDF','IDN', 'IDE','IO' };
+              
+%batch2;
+%batch2_summary;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% batch3
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% load merged set
+% perform  ica on 99% variance
+
+variance_portion = 0.99; % for pca reduction
+%batch3;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% batch4
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% let user view icas from batch3 and select those that should be rejected from all trials. The program then  selectively removes comps on trial-to-trial basis.Final clean data is then split into condition specific sets.
+% define conditions and corresponding triggers-of-interest
+
+%batch4;
+batch5;
+
+
+##### SOURCE END #####
+-->
+   </body>
+</html>
