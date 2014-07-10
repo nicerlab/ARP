@@ -20,10 +20,10 @@ subjects = {'KIAPS'};
 epoch_limits= [-0.2 4.0];  %in seconds - before and after trigger stimulus
 baseline    = [-0.2 0];    %in seconds - before and after trigger stimulus
 nchans = 14; % number of channels used
-file_type = '*.edf'; % BV header file extensions
-systemtype = 'NS';  % BrainVision system
+file_type = '*.set'; % BV header file extensions
+systemtype = 'EP';  % BrainVision system
 
-rereference = 1;  % one if the data needs to be rereferenced, 0 if not.  If you recorded with the setting "AVERAGE REFERENCE" this must be set to 0
+rereference = 0;  % one if the data needs to be rereferenced, 0 if not.  If you recorded with the setting "AVERAGE REFERENCE" this must be set to 0
 
 % set this value if you have channels you want to keep for data but exclude from average referencing
 refexclude =[];  % or refexclude=[31 32];  or some variant thereof 

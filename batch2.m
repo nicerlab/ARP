@@ -45,6 +45,8 @@ for s=1:numel(subjects)
         EEG = pop_biosig([inpath fname],'channels',savechans,'ref',refchan);
     elseif systemtype =='BV'
         EEG = pop_loadbv(inpath,fname,[],savechans);
+	elseif systemtype == 'EP'
+			EEG = pop_loadset(fname, inpath);
     end
     EEG = eeg_checkset(EEG); EEG.data = double(EEG.data);
     EEG = eeg_checkset(EEG); EEG.data = double(EEG.data);
