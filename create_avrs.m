@@ -1,7 +1,7 @@
 % Calculate subject/conditions specific averages and save them in avr
 % format
 % "merged_conditions" sets are input and averaged
-Batch_Initialize;
+Batch_Initialize_BV32;
 
 for s=1:numel(subjects)
     subj = subjects{s};

@@ -1,5 +1,6 @@
-Batch_Initialize;
+%Batch_Initialize;
 %Batch_Initialize_LNF;
+Batch_Initialize_EPOC;
 diary;
 diary([outdir 'logfile.txt']);
 disp('Parameters are set');

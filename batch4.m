@@ -1,5 +1,6 @@
 % User makes quick  decisions about component rejection
-Batch_Initialize;
+%Batch_Initialize;
+Batch_Initialize_BV32;
 subjects
 subj = input(['Enter subject: '],'s');
 if ~ismember(subj, subjects)
